@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# ========== DATI SENSIBILI (non committare mai) ==========
+# - .env, .env.local, .env.development, .env.production
+#   (Supabase: URL, anon key; Google Fit: EXPO_PUBLIC_GOOGLE_FIT_CLIENT_ID; altri secret)
+# - File con chiavi/token: *secret*, *credentials*, *token*.json, *serviceAccount*.json
+# - Keystore / certificati: .jks, .keystore, .p8, .p12, .key, .mobileprovision, .pem
+# - Config con token: .cursor/mcp.json, firebase config con API key, ecc.
+# ==========
+
+.env
+.env.*
+!.env.example
+*secret*
+*credentials*
+*serviceAccount*.json
+*google-services*.json
+*.keystore
+
+.cursor/
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+
+# Supabase
+.supabase/
+
+# MCP config (può contenere token)
+.cursor/mcp.json
