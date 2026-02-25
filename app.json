@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/ReBorn_icon.png",
-    "scheme": "reborn",
+    "scheme": [
+      "reborn",
+      "com.googleusercontent.apps.2634578916-9i6a93ov9p2c4sib59sqs5r0sui5uf7o"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -33,7 +36,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      "expo-web-browser"
     ]
   }
 }

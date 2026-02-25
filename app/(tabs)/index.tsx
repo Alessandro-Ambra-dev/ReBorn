@@ -365,7 +365,7 @@ export default function HomeScreen() {
             <Text style={styles.hint}>Nessun allenamento in questa data.</Text>
           ) : (
             dayWorkouts.map((w) => (
-              // @ts-expect-error key is valid for React list items
+              
               <View style={styles.workoutCard} key={w.id}>
                 <Text style={styles.workoutIcon}>
                   {w.type === "aerobic" ? AEROBIC_ICON : ANAEROBIC_ICON}
@@ -445,7 +445,7 @@ export default function HomeScreen() {
         <Text style={styles.goalMessage}>{goalMessage}</Text>
       </View>
 
-      {/* <View style={styles.goalCard}>
+      {true && <View style={styles.goalCard}>
         <Text style={styles.goalTitle}>Google Fit</Text>
         <Text style={styles.goalSubtitle}>
           Importa allenamenti dagli ultimi 7 giorni (durata, kcal, tipo)
@@ -552,7 +552,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </>
         )}
-      </View> */}
+      </View> }
 
       {showAddForm ? (
         <>
@@ -665,7 +665,7 @@ export default function HomeScreen() {
             { label: "Z4", value: hrZ4, set: setHrZ4, bg: "#9a3412" },
             { label: "Z5", value: hrZ5, set: setHrZ5, bg: "#7f1d1d" },
           ].map(({ label, value, set, bg }) => (
-            // @ts-expect-error key is valid for React list items
+            
             <View style={[styles.hrZoneRow, { backgroundColor: bg }]} key={label}>
               <TouchableOpacity
                 style={styles.hrZoneBtn}

@@ -1,7 +1,10 @@
 /**
  * OAuth Google per Fitness API: connetti account e salva access token.
- * Per lo scambio del code serve un client OAuth "Android" (senza client secret)
- * oppure un backend che scambia il code. Vedi docs/GOOGLE_FIT.md.
+ * Usa un client OAuth "Android" (senza client secret).
+ * Il redirect URI è nel formato "reverse client ID" standard per Android:
+ *   com.googleusercontent.apps.<CLIENT_ID_PREFIX>:/oauth2redirect/google
+ * Non serve configurare redirect URI nella Google Cloud Console per i client Android.
+ * Vedi docs/GOOGLE_FIT.md.
  */
 
 import * as WebBrowser from "expo-web-browser";
@@ -31,10 +34,18 @@ function getGoogleClientId(): string {
   const id = process.env.EXPO_PUBLIC_GOOGLE_FIT_CLIENT_ID;
   if (!id) {
     throw new Error(
-      "Imposta EXPO_PUBLIC_GOOGLE_FIT_CLIENT_ID in .env (Client ID OAuth Android o Web). Vedi docs/GOOGLE_FIT.md."
+      "Imposta EXPO_PUBLIC_GOOGLE_FIT_CLIENT_ID in .env (Client ID OAuth Android). Vedi docs/GOOGLE_FIT.md."
     );
   }
   return id;
+}
+
+/**
+ * Ricava lo scheme "reverse client ID" dal client ID completo.
+ * Es: "12345-abc.apps.googleusercontent.com" → "com.googleusercontent.apps.12345-abc"
+ */
+function getReverseScheme(clientId: string): string {
+  return `com.googleusercontent.apps.${clientId.replace(".apps.googleusercontent.com", "")}`;
 }
 
 /** Restituisce il token salvato (se presente). */
@@ -70,9 +81,11 @@ export async function clearGoogleFitToken(): Promise<void> {
  */
 export async function promptGoogleFitAuth(): Promise<GoogleFitToken | null> {
   const clientId = getGoogleClientId();
+  // Redirect URI standard per client Android Google OAuth (nessuna configurazione manuale richiesta).
+  // Google accetta automaticamente questo formato per i client di tipo Android.
+  const reverseScheme = getReverseScheme(clientId);
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: undefined,
-    path: "redirect",
+    native: `${reverseScheme}:/oauth2redirect/google`,
   });
 
   const discovery = {

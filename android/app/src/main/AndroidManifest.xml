@@ -26,6 +26,13 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="reborn"/>
       </intent-filter>
+      <!-- Reverse client ID scheme per Google OAuth (client Android) -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="com.googleusercontent.apps.2634578916-9i6a93ov9p2c4sib59sqs5r0sui5uf7o"/>
+      </intent-filter>
     </activity>
   </application>
 </manifest>
