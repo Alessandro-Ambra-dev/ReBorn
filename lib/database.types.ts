@@ -15,11 +15,16 @@ export type Database = {
           created_at: string | null
           daily_steps_avg: number | null
           daily_water_liters: number | null
+          daily_kcal_goal: number | null
           distance_unit: string | null
           gender: string | null
           height_unit: string | null
           height_value: number | null
           id: string
+          include_active_kcal: boolean | null
+          macro_carb_pct: number | null
+          macro_fat_pct: number | null
+          macro_protein_pct: number | null
           updated_at: string | null
           username: string | null
           target_aerobic_sessions: number | null
@@ -34,11 +39,16 @@ export type Database = {
           created_at?: string | null
           daily_steps_avg?: number | null
           daily_water_liters?: number | null
+          daily_kcal_goal?: number | null
           distance_unit?: string | null
           gender?: string | null
           height_unit?: string | null
           height_value?: number | null
           id: string
+          include_active_kcal?: boolean | null
+          macro_carb_pct?: number | null
+          macro_fat_pct?: number | null
+          macro_protein_pct?: number | null
           updated_at?: string | null
           username?: string | null
           target_aerobic_sessions?: number | null
@@ -53,11 +63,16 @@ export type Database = {
           created_at?: string | null
           daily_steps_avg?: number | null
           daily_water_liters?: number | null
+          daily_kcal_goal?: number | null
           distance_unit?: string | null
           gender?: string | null
           height_unit?: string | null
           height_value?: number | null
           id?: string
+          include_active_kcal?: boolean | null
+          macro_carb_pct?: number | null
+          macro_fat_pct?: number | null
+          macro_protein_pct?: number | null
           updated_at?: string | null
           username?: string | null
           target_aerobic_sessions?: number | null
@@ -147,9 +162,98 @@ export type Database = {
         }
         Relationships: []
       }
+      food_library: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          brand: string | null
+          code: string | null
+          base_amount_grams: number
+          kcal_per_base: number
+          carbs_g_per_base: number
+          fat_g_per_base: number
+          protein_g_per_base: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          brand?: string | null
+          code?: string | null
+          base_amount_grams: number
+          kcal_per_base: number
+          carbs_g_per_base: number
+          fat_g_per_base: number
+          protein_g_per_base: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          brand?: string | null
+          code?: string | null
+          base_amount_grams?: number
+          kcal_per_base?: number
+          carbs_g_per_base?: number
+          fat_g_per_base?: number
+          protein_g_per_base?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      food_logs: {
+        Row: {
+          id: string
+          user_id: string
+          food_id: string | null
+          name: string
+          brand: string | null
+          grams: number
+          kcal: number
+          carbs_g: number
+          fat_g: number
+          protein_g: number
+          logged_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          food_id?: string | null
+          name: string
+          brand?: string | null
+          grams: number
+          kcal: number
+          carbs_g: number
+          fat_g: number
+          protein_g: number
+          logged_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          food_id?: string | null
+          name?: string
+          brand?: string | null
+          grams?: number
+          kcal?: number
+          carbs_g?: number
+          fat_g?: number
+          protein_g?: number
+          logged_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
-    Functions: { [_ in never]: never }
+    Functions: {
+      check_email_exists: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
+    }
     Enums: { [_ in never]: never }
   }
 }

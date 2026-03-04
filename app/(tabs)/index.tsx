@@ -309,6 +309,12 @@ export default function HomeScreen() {
   const weekDates = getWeekDates(weekRef);
   const thisWeekStart = getWeekStart(weekRef);
   const thisWeekKey = toISODate(thisWeekStart);
+  const currentWeekStart = getWeekStart(new Date());
+  const isCurrentWeek =
+    thisWeekStart.getFullYear() === currentWeekStart.getFullYear() &&
+    thisWeekStart.getMonth() === currentWeekStart.getMonth() &&
+    thisWeekStart.getDate() === currentWeekStart.getDate();
+  const canGoNextWeek = thisWeekStart.getTime() < currentWeekStart.getTime();
   const lastWeekStart = getLastWeekStarts(weekRef, 2)[1];
   const lastWeekKey = lastWeekStart ? toISODate(lastWeekStart) : null;
   const thisWeekSummary = weeklySummaries.find((w) => w.week_start === thisWeekKey);
@@ -479,6 +485,10 @@ export default function HomeScreen() {
                 const token = await getStoredGoogleFitToken();
                 if (!token?.accessToken) {
                   setHasGoogleFitToken(false);
+                  Alert.alert(
+                    "Sessione scaduta",
+                    "Il collegamento con Google Fit è scaduto. Riconnetti il tuo account Google Fit."
+                  );
                   return;
                 }
                 setGoogleFitSyncing(true);
@@ -489,17 +499,21 @@ export default function HomeScreen() {
                   const startStr = toISODate(start) + "T00:00:00Z";
                   const { data: existing } = await supabase
                     .from("workouts")
-                    .select("workout_at")
+                    .select("id, workout_at")
                     .eq("user_id", session.user.id)
                     .gte("workout_at", startStr);
-                  const existingMinutes = new Set(
-                    (existing ?? []).map((w) => w.workout_at.slice(0, 16))
-                  );
+                  const existingByMinute = new Map<string, string>();
+                  for (const w of existing ?? []) {
+                    const key = w.workout_at.slice(0, 16);
+                    if (!existingByMinute.has(key)) existingByMinute.set(key, w.id);
+                  }
                   let inserted = 0;
+                  let updated = 0;
+                  const touchedWeekStarts = new Set<string>();
                   for (const w of list) {
                     const key = w.workout_at.slice(0, 16);
-                    if (existingMinutes.has(key)) continue;
-                    const { error } = await supabase.from("workouts").insert({
+                    const existingId = existingByMinute.get(key);
+                    const payload = {
                       user_id: session.user.id,
                       type: w.type,
                       exercise_type: w.exercise_type,
@@ -511,18 +525,47 @@ export default function HomeScreen() {
                       hr_zone_4_min: w.hr_zone_4_min,
                       hr_zone_5_min: w.hr_zone_5_min,
                       workout_at: w.workout_at,
-                    });
-                    if (!error) {
-                      inserted++;
-                      existingMinutes.add(key);
+                    };
+                    let error;
+                    if (existingId) {
+                      ({ error } = await supabase
+                        .from("workouts")
+                        .update(payload)
+                        .eq("id", existingId));
+                    } else {
+                      ({ error } = await supabase.from("workouts").insert(payload));
                     }
+                    if (!error) {
+                      if (existingId) {
+                        updated++;
+                      } else {
+                        inserted++;
+                        existingByMinute.set(key, ""); // segna che ora esiste
+                      }
+                      const d = new Date(w.workout_at);
+                      const weekStart = getWeekStart(d);
+                      touchedWeekStarts.add(toISODate(weekStart));
+                    }
+                  }
+                  // Aggiorna i riepiloghi settimanali per le settimane toccate dagli import
+                  for (const ws of touchedWeekStarts) {
+                    await upsertWeeklyForWeek(new Date(ws));
                   }
                   await refreshWeek();
                   Alert.alert(
                     "Sincronizzazione",
-                    inserted === 0
+                    inserted === 0 && updated === 0
                       ? "Nessun nuovo allenamento da importare (già presenti o nessuna sessione negli ultimi 7 giorni)."
-                      : `Importati ${inserted} allenament${inserted === 1 ? "o" : "i"} da Google Fit.`
+                      : [
+                          inserted > 0
+                            ? `Importati ${inserted} allenament${inserted === 1 ? "o" : "i"} da Google Fit.`
+                            : null,
+                          updated > 0
+                            ? `Aggiornati ${updated} allenament${updated === 1 ? "o" : "i"} già presenti.`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join("\n")
                   );
                 } catch (e) {
                   Alert.alert(
@@ -734,22 +777,34 @@ export default function HomeScreen() {
         >
           <Text style={styles.navText}>← Prec</Text>
         </TouchableOpacity>
-        <Text style={styles.weekTitle}>
-          {thisWeekStart.getDate()}/{thisWeekStart.getMonth() + 1} –{" "}
-          {(() => {
-            const end = new Date(thisWeekStart);
-            end.setDate(end.getDate() + 6);
-            return `${end.getDate()}/${end.getMonth() + 1}`;
-          })()}
-        </Text>
+        <View style={{ alignItems: "center" }}>
+          <Text style={styles.weekTitle}>
+            {thisWeekStart.getDate()}/{thisWeekStart.getMonth() + 1} –{" "}
+            {(() => {
+              const end = new Date(thisWeekStart);
+              end.setDate(end.getDate() + 6);
+              return `${end.getDate()}/${end.getMonth() + 1}`;
+            })()}
+          </Text>
+          <Text
+            style={[
+              styles.weekSubtitle,
+              isCurrentWeek && { color: "#22c55e" },
+            ]}
+          >
+            {isCurrentWeek ? "Settimana corrente" : "Settimana passata"}
+          </Text>
+        </View>
         <TouchableOpacity
+          disabled={!canGoNextWeek}
           onPress={() => {
+            if (!canGoNextWeek) return;
             const d = new Date(weekRef);
             d.setDate(d.getDate() + 7);
             setWeekRef(d);
           }}
         >
-          <Text style={styles.navText}>Succ →</Text>
+          <Text style={[styles.navText, !canGoNextWeek && styles.navTextDisabled]}>Succ →</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.weekChart}>
@@ -1030,7 +1085,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   navText: { fontFamily: fonts.regular, fontSize: 14, color: "#22c55e" },
+  navTextDisabled: { color: "#475569" },
   weekTitle: { fontFamily: fonts.medium, fontSize: 14, color: "#e2e8f0" },
+  weekSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
+  },
   weekChart: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   dayColumn: { alignItems: "center", flex: 1 },
   dayLabel: { fontFamily: fonts.regular, fontSize: 11, color: "#94a3b8", marginBottom: 4 },

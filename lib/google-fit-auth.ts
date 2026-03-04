@@ -48,8 +48,8 @@ function getReverseScheme(clientId: string): string {
   return `com.googleusercontent.apps.${clientId.replace(".apps.googleusercontent.com", "")}`;
 }
 
-/** Restituisce il token salvato (se presente). */
-export async function getStoredGoogleFitToken(): Promise<GoogleFitToken | null> {
+/** Restituisce il token salvato (se presente), senza verificare la scadenza. */
+async function getRawStoredToken(): Promise<GoogleFitToken | null> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -59,6 +59,67 @@ export async function getStoredGoogleFitToken(): Promise<GoogleFitToken | null> 
   } catch {
     return null;
   }
+}
+
+/**
+ * Usa il refresh token per ottenere un nuovo access token da Google.
+ * I client Android OAuth non hanno un client secret, quindi lo omettiamo.
+ */
+async function refreshAccessToken(token: GoogleFitToken): Promise<GoogleFitToken | null> {
+  if (!token.refreshToken) return null;
+  try {
+    const clientId = getGoogleClientId();
+    const res = await fetch(GOOGLE_DISCOVERY.tokenEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: [
+        `client_id=${encodeURIComponent(clientId)}`,
+        `refresh_token=${encodeURIComponent(token.refreshToken)}`,
+        "grant_type=refresh_token",
+      ].join("&"),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      refresh_token?: string;
+    };
+    if (!json.access_token) return null;
+    const refreshed: GoogleFitToken = {
+      accessToken: json.access_token,
+      refreshToken: json.refresh_token ?? token.refreshToken,
+      expiresAt:
+        json.expires_in != null ? Date.now() + json.expires_in * 1000 : undefined,
+    };
+    await setStoredGoogleFitToken(refreshed);
+    return refreshed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Restituisce un token valido:
+ * - se il token salvato è ancora valido (con margine di 60 s), lo restituisce direttamente;
+ * - se è scaduto e c'è un refresh token, prova a rinnovarlo automaticamente;
+ * - se il rinnovo fallisce o non c'è token, restituisce null (l'utente dovrà riautorizzare).
+ */
+export async function getStoredGoogleFitToken(): Promise<GoogleFitToken | null> {
+  const token = await getRawStoredToken();
+  if (!token) return null;
+
+  // Margine di 60 secondi per evitare race condition
+  const isExpired = token.expiresAt != null && token.expiresAt - 60_000 < Date.now();
+
+  if (!isExpired) return token;
+
+  // Token scaduto → tenta il refresh
+  const refreshed = await refreshAccessToken(token);
+  if (refreshed) return refreshed;
+
+  // Refresh fallito → cancella il token così l'utente viene invitato a riconnettersi
+  await clearGoogleFitToken();
+  return null;
 }
 
 /** Salva il token in AsyncStorage. */

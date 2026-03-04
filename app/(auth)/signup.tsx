@@ -4,10 +4,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  View,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
@@ -47,8 +49,17 @@ export default function SignupScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.title}>Registrati</Text>
-      <Text style={styles.subtitle}>Crea il tuo account ReBorn</Text>
+      <View style={styles.logoBox}>
+        <Image
+          source={require("@/assets/images/ReBorn_icon.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      <Text style={styles.title}>Crea account</Text>
+      <Text style={styles.subtitle}>Inizia il tuo percorso con ReBorn</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Nome utente (opzionale)"
@@ -100,10 +111,19 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#0f172a",
   },
+  logoBox: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  logo: {
+    width: 88,
+    height: 88,
+    borderRadius: 20,
+  },
   title: {
-    fontFamily: fonts.regular,
-    fontSize: 32,
-    fontWeight: "bold",
+    fontFamily: fonts.bold,
+    fontWeight: fontWeights.bold,
+    fontSize: 28,
     color: "#f8fafc",
     marginBottom: 4,
   },

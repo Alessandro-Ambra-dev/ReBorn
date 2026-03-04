@@ -29,48 +29,66 @@ export type GoogleFitWorkout = {
   workout_at: string; // ISO
 };
 
-/** Activity type → aerobic (running, cycling, etc.) o anaerobic (strength, etc.) */
-const AEROBIC_ACTIVITY_TYPES = new Set([
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
-  39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
-  57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
-  75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92,
-  93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
-  109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+/** Activity type → aerobic (running, cycling, etc.) o anaerobic (strength, etc.).
+ * Basato sulla tabella ufficiale Google Fit (activity-types).
+ * Qui elenchiamo solo i tipi chiaramente di forza / resistenza muscolare.
+ */
+const ANAEROBIC_ACTIVITY_TYPES = new Set<number>([
+  21, // Calisthenics
+  22, // Circuit training
+  33, // Gymnastics
+  41, // Kettlebell training
+  47, // P90X
+  80, // Strength training
+  97, // Weightlifting
+  100, // Yoga (lo consideriamo più forza/mobilità)
+  113, // Crossfit
 ]);
 const ACTIVITY_TYPE_NAMES: Record<number, string> = {
-  1: "In sella (bici)",
+  1: "Bici",
   2: "Corsa",
   3: "Escursionismo",
   4: "Nuoto",
-  5: "Multi-sport",
-  8: "Camminata",
-  9: "Fitness",
-  10: "Allenamento",
-  11: "Sport",
+  5: "Altro sport",
+  7: "Camminata",
+  8: "Corsa",
+  9: "Aerobica",
   13: "Ellittica",
-  14: "Sci",
-  15: "Pattinaggio",
-  16: "Voga",
-  17: "Arrampicata",
-  18: "Yoga",
-  19: "Pilates",
-  20: "Cross training",
-  21: "HIIT",
-  22: "Danza",
-  23: "Functional",
-  24: "Pesi",
-  25: "CrossFit",
+  21: "Calisthenics",
+  22: "Circuit training",
+  24: "Danza",
+  25: "Ellittica",
   26: "Core",
   27: "Stretching",
-  28: "Meditazione",
-  29: "Riscaldamento",
-  30: "Defaticamento",
+  33: "Ginnastica",
+  35: "Hiking",
+  39: "Salto corda",
+  40: "Kayak",
+  41: "Kettlebell",
+  45: "Meditazione",
+  47: "P90X",
+  49: "Pilates",
+  52: "Arrampicata",
+  53: "Voga",
+  54: "Vogatore",
+  65: "Sci",
+  67: "Sci di fondo",
+  71: "Slitta",
+  73: "Snowboard",
+  75: "Ciaspole",
+  80: "Strength training",
+  82: "Nuoto",
+  86: "Sport di squadra",
+  93: "Camminata fitness",
+  95: "Camminata tapis roulant",
+  97: "Weightlifting",
+  100: "Yoga",
+  101: "Zumba",
+  113: "CrossFit",
 };
 
 function isAerobic(activityType: number): boolean {
-  if (activityType === 24 || activityType === 25) return false; // Pesi, CrossFit → forza
+  if (ANAEROBIC_ACTIVITY_TYPES.has(activityType)) return false;
   return true;
 }
 
@@ -99,7 +117,13 @@ export async function listSessions(
   startTimeMillis: number,
   endTimeMillis: number
 ): Promise<GoogleFitSession[]> {
-  const url = `${FITNESS_API}/sessions?startTime=${startTimeMillis}&endTime=${endTimeMillis}`;
+  // L'endpoint users.sessions.list richiede startTime/endTime in formato RFC3339,
+  // non in millisecondi epoch. Convertiamo i ms in ISO 8601 (UTC).
+  const startTime = new Date(startTimeMillis).toISOString();
+  const endTime = new Date(endTimeMillis).toISOString();
+  const url = `${FITNESS_API}/sessions?startTime=${encodeURIComponent(
+    startTime
+  )}&endTime=${encodeURIComponent(endTime)}`;
   const res = await fitFetch(accessToken, url);
   if (!res.ok) {
     const err = await res.text();
@@ -117,7 +141,9 @@ type AggregateBucket = {
   }>;
 };
 
-/** Aggregato calorie e heart rate summary per sessione (bucketBySession). */
+/** Aggregato calorie per sessione (bucketBySession).
+ * Nota: com.google.heart_rate.summary non ha sempre un "default datasource" per tutti gli
+ * utenti / dispositivi e può causare errori 400. Per ora chiediamo solo le calorie. */
 export async function aggregateSessionData(
   accessToken: string,
   startTimeMillis: number,
@@ -126,7 +152,6 @@ export async function aggregateSessionData(
   const body = {
     aggregateBy: [
       { dataTypeName: "com.google.calories.expended" },
-      { dataTypeName: "com.google.heart_rate.summary" },
     ],
     bucketBySession: { minDurationMillis: 60000 },
     startTimeMillis,

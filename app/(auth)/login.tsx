@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
@@ -39,8 +40,17 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.title}>ReBorn</Text>
+      <View style={styles.logoBox}>
+        <Image
+          source={require("@/assets/images/ReBorn_icon.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      <Text style={styles.title}>Bentornato</Text>
       <Text style={styles.subtitle}>Accedi al tuo account</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -60,6 +70,13 @@ export default function LoginScreen() {
         secureTextEntry
         editable={!loading}
       />
+
+      <Link href="/(auth)/forgot-password" asChild>
+        <TouchableOpacity style={styles.forgotButton} disabled={loading}>
+          <Text style={styles.forgotText}>Password dimenticata?</Text>
+        </TouchableOpacity>
+      </Link>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -67,6 +84,7 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Accedi</Text>
         )}
       </TouchableOpacity>
+
       <Link href="/(auth)/signup" asChild>
         <TouchableOpacity style={styles.linkButton} disabled={loading}>
           <Text style={styles.linkText}>Non hai un account? Registrati</Text>
@@ -83,10 +101,19 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#0f172a",
   },
+  logoBox: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  logo: {
+    width: 88,
+    height: 88,
+    borderRadius: 20,
+  },
   title: {
-    fontFamily: fonts.regular,
-    fontSize: 32,
-    fontWeight: "bold",
+    fontFamily: fonts.bold,
+    fontWeight: fontWeights.bold,
+    fontSize: 28,
     color: "#f8fafc",
     marginBottom: 4,
   },
@@ -104,6 +131,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#f8fafc",
     marginBottom: 12,
+  },
+  forgotButton: {
+    alignSelf: "flex-end",
+    marginBottom: 8,
+    marginTop: -4,
+  },
+  forgotText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: "#64748b",
   },
   button: {
     backgroundColor: "#22c55e",

@@ -55,7 +55,7 @@ export function getZoneColor(zone: Zone): string {
   }
 }
 
-/** Descrizione sintetica livello corporeo/atletico (media valori sportivi internazionali). */
+/** Descrizione dettagliata e personalizzata del livello corporeo/atletico. */
 export function getBodyDescription(params: {
   bmi: number | null;
   steps: number | null;
@@ -65,41 +65,70 @@ export function getBodyDescription(params: {
   gender: "male" | "female";
 }): string {
   const { bmi, steps, aerobicMin, anaerobicMin, waterLiters, gender } = params;
-  const parts: string[] = [];
+  const lines: string[] = [];
 
   if (bmi != null) {
     const { zone, label } = getBmiZone(bmi);
-    const corporeo =
+    const advice =
       zone === "green"
-        ? "Costituzione nella norma"
+        ? "Mantieni peso e abitudini alimentari attuali."
         : zone === "yellow"
-          ? "Costituzione da monitorare (sovrappeso)"
-          : "Costituzione da supportare (sottopeso o obesità)";
-    parts.push(corporeo);
+          ? "Considera un leggero deficit calorico e aumenta l'attività fisica."
+          : bmi < 18.5
+            ? "Valuta un apporto calorico maggiore e consulta un nutrizionista."
+            : "Consulta un medico per un piano di rientro graduale.";
+    lines.push(`Peso corporeo: BMI ${bmi.toFixed(1)} (${label}). ${advice}`);
   }
 
   if (steps != null) {
-    const { label } = getStepsZone(steps);
-    parts.push(`attività quotidiana ${label.toLowerCase()}`);
+    const { zone, label } = getStepsZone(steps);
+    const s = steps.toLocaleString("it-IT");
+    const advice =
+      zone === "green"
+        ? "Ottimo: mantieni questo livello di movimento quotidiano."
+        : zone === "yellow"
+          ? `Sei a ${s} passi/giorno. Punta a superare i 10.000 passi per benefici cardiovascolari ottimali.`
+          : `Solo ${s} passi/giorno. Prova a integrare brevi camminate durante la giornata.`;
+    lines.push(`Movimento quotidiano: ${label.toLowerCase()} (${s} passi). ${advice}`);
   }
 
   if (aerobicMin != null || anaerobicMin != null) {
     const aero = aerobicMin ?? 0;
     const ana = anaerobicMin ?? 0;
-    if (aero >= 150 && ana >= 60)
-      parts.push("livello atletico in linea con le raccomandazioni OMS (cardio + forza)");
-    else if (aero >= 75 || ana >= 30)
-      parts.push("livello atletico parzialmente in linea con le raccomandazioni OMS");
-    else parts.push("livello atletico sotto le raccomandazioni OMS");
+    const aeroOk = aero >= 150;
+    const anaOk = ana >= 60;
+    if (aeroOk && anaOk) {
+      lines.push(
+        `Allenamento: ${aero} min cardio + ${ana} min forza/settimana — rispetti pienamente le linee guida OMS. Continua così.`
+      );
+    } else {
+      const missing: string[] = [];
+      if (!aeroOk)
+        missing.push(
+          `aumenta il cardio (hai ${aero} min, obiettivo ≥150 min/sett)`
+        );
+      if (!anaOk)
+        missing.push(
+          `aumenta la forza (hai ${ana} min, obiettivo ≥60 min/sett)`
+        );
+      lines.push(
+        `Allenamento: ${missing.join(" e ")}. Punta a combinare cardio e allenamento con i pesi ogni settimana.`
+      );
+    }
   }
 
   if (waterLiters != null) {
+    const target = gender === "female" ? 2 : 2.5;
     const { zone } = getWaterZone(waterLiters, gender);
-    if (zone === "green") parts.push("idratazione adeguata");
-    else if (zone === "yellow") parts.push("idratazione da aumentare");
-    else parts.push("idratazione insufficiente");
+    const advice =
+      zone === "green"
+        ? `Sei a ${waterLiters} L/giorno — idratazione nella norma.`
+        : zone === "yellow"
+          ? `Sei a ${waterLiters} L/giorno, ma il target è ${target} L. Tieni sempre una bottiglia con te.`
+          : `Solo ${waterLiters} L/giorno su ${target} L raccomandati. Aumenta gradualmente l'apporto idrico.`;
+    lines.push(advice);
   }
 
-  if (parts.length === 0) return "Inserisci peso, altezza e altri dati per una valutazione.";
-  return parts.join("; ").replace(/^./, (c) => c.toUpperCase()) + ".";
+  if (lines.length === 0) return "Inserisci peso, altezza e altri dati per ricevere una valutazione personalizzata.";
+  return lines.join("\n\n");
 }

@@ -455,7 +455,9 @@ export default function ProfileScreen() {
             ) : null}
           </View>
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryDesc}>{summaryDescription}</Text>
+            {summaryDescription.split("\n\n").map((line, i) => (
+              <Text key={i} style={styles.summaryDesc}>{line}</Text>
+            ))}
           </View>
           {bmr != null && (
             <View style={styles.bmrBox}>
@@ -467,15 +469,10 @@ export default function ProfileScreen() {
           <View style={styles.indicatorsList}>
             {bmi != null && (
               <View style={styles.indicatorRow}>
-                <View
-                  style={[
-                    styles.zoneDot,
-                    { backgroundColor: getZoneColor(getBmiZone(bmi).zone) },
-                  ]}
-                />
-                <Text style={styles.indicatorLabel}>BMI</Text>
-                <Text style={styles.indicatorValue}>
-                  {bmi.toFixed(1)} – {getBmiZone(bmi).label}
+                <View style={[styles.zoneDot, { backgroundColor: getZoneColor(getBmiZone(bmi).zone) }]} />
+                <Text style={styles.indicatorText}>
+                  <Text style={styles.indicatorKey}>BMI  </Text>
+                  {bmi.toFixed(1)} — {getBmiZone(bmi).label}
                 </Text>
               </View>
             )}
@@ -486,8 +483,10 @@ export default function ProfileScreen() {
                 return (
                   <View style={styles.indicatorRow}>
                     <View style={[styles.zoneDot, { backgroundColor: getZoneColor(zone) }]} />
-                    <Text style={styles.indicatorLabel}>Passi/giorno</Text>
-                    <Text style={styles.indicatorValue}>{steps} – {label}</Text>
+                    <Text style={styles.indicatorText}>
+                      <Text style={styles.indicatorKey}>Passi/giorno  </Text>
+                      {steps.toLocaleString()} — {label}
+                    </Text>
                   </View>
                 );
               })()
@@ -498,8 +497,10 @@ export default function ProfileScreen() {
                 return (
                   <View style={styles.indicatorRow}>
                     <View style={[styles.zoneDot, { backgroundColor: getZoneColor(zone) }]} />
-                    <Text style={styles.indicatorLabel}>Aerobica/sett</Text>
-                    <Text style={styles.indicatorValue}>{aerobicTotal} min – {label}</Text>
+                    <Text style={styles.indicatorText}>
+                      <Text style={styles.indicatorKey}>Aerobica/sett  </Text>
+                      {aerobicTotal} min — {label}
+                    </Text>
                   </View>
                 );
               })()
@@ -510,8 +511,10 @@ export default function ProfileScreen() {
                 return (
                   <View style={styles.indicatorRow}>
                     <View style={[styles.zoneDot, { backgroundColor: getZoneColor(zone) }]} />
-                    <Text style={styles.indicatorLabel}>Anaerobica/sett</Text>
-                    <Text style={styles.indicatorValue}>{anaerobicTotal} min – {label}</Text>
+                    <Text style={styles.indicatorText}>
+                      <Text style={styles.indicatorKey}>Anaerobica/sett  </Text>
+                      {anaerobicTotal} min — {label}
+                    </Text>
                   </View>
                 );
               })()
@@ -522,8 +525,10 @@ export default function ProfileScreen() {
                 return (
                   <View style={styles.indicatorRow}>
                     <View style={[styles.zoneDot, { backgroundColor: getZoneColor(zone) }]} />
-                    <Text style={styles.indicatorLabel}>Acqua/giorno</Text>
-                    <Text style={styles.indicatorValue}>{waterLiters} L – {label}</Text>
+                    <Text style={styles.indicatorText}>
+                      <Text style={styles.indicatorKey}>Acqua/giorno  </Text>
+                      {waterLiters} L — {label}
+                    </Text>
                   </View>
                 );
               })()
@@ -612,48 +617,53 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: "#1e293b",
     borderRadius: 12,
-    padding: 20,
+    padding: 16,
     marginBottom: 16,
+    gap: 10,
   },
   summaryDesc: {
     fontFamily: fonts.regular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
     color: "#e2e8f0",
   },
   indicatorsTitle: {
     fontFamily: fonts.bold,
     fontWeight: fontWeights.bold,
-    fontSize: 16,
-    color: "#f8fafc",
-    marginBottom: 12,
+    fontSize: 14,
+    color: "#94a3b8",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
-  indicatorsList: { gap: 10 },
+  indicatorsList: {
+    backgroundColor: "#1e293b",
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
   indicatorRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1e293b",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 8,
+    paddingVertical: 7,
   },
   zoneDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
+    flexShrink: 0,
   },
-  indicatorLabel: {
+  indicatorText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: "#e2e8f0",
+    flex: 1,
+  },
+  indicatorKey: {
     fontFamily: fonts.medium,
     fontWeight: fontWeights.medium,
-    fontSize: 14,
     color: "#94a3b8",
-    width: 110,
-  },
-  indicatorValue: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: "#f8fafc",
-    flex: 1,
   },
 });

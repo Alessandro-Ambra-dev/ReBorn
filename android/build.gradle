@@ -18,6 +18,15 @@ allprojects {
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
   }
+  configurations.all {
+    resolutionStrategy {
+      // material-1.12.0 e appcompat-1.7.0 contengono risorse <color> che l'aapt2
+      // Java API di AGP non riesce a processare (IllegalStateException: Can not extract
+      // resource from ParsedResource). Le versioni 1.11.0 / 1.6.1 non hanno questo problema.
+      force 'com.google.android.material:material:1.11.0'
+      force 'androidx.appcompat:appcompat:1.6.1'
+    }
+  }
 }
 
 apply plugin: "expo-root-project"

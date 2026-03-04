@@ -5,16 +5,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/ReBorn_icon.png",
-    "scheme": [
-      "reborn",
-      "com.googleusercontent.apps.2634578916-9i6a93ov9p2c4sib59sqs5r0sui5uf7o"
-    ],
+    "scheme": "reborn",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/ReBorn_splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "transparent"
+      "backgroundColor": "#00000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -25,9 +22,13 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/ReBorn_icon.png",
         "monochromeImage": "./assets/images/ReBorn_icon.png",
-        "backgroundColor": "transparent"
+        "backgroundColor": "#00000000"
       },
-      "package": "com.reborn.app"
+      "package": "com.reborn.app",
+      "androidNavigationBar": {
+        "backgroundColor": "#0f172a",
+        "barStyle": "light-content"
+      }
     },
     "web": {
       "bundler": "metro",
